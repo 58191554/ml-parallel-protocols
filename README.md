@@ -335,3 +335,8 @@ If you are enrolled in the course (on SIO), but not registered on Gradescope, pl
 #### References 
 
 - some images credit to https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html
+- If the disk quata is limited, use:
+```bash
+rm -r .vscode-server/bin/*
+rm -r .vscode-server/code-*
+```
