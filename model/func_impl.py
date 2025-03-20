@@ -64,21 +64,31 @@ def get_info(
     """TODO: Your code here"""
 
     # Get the mp_idx, dp_idx from rank, mp_size and dp_size (you may not need to use all three of them)
-
-    ...
+    mp_idx = rank % mp_size
+    dp_idx = rank // mp_size
 
     # Get the model/data parallel communication groups
     # the model/data parallel communication group is required to apply mpi operations within the scope of the group
     # Hint: try to figure out the relationship between the mp_idx, dp_idx with the mp/dp communication group
     #       and use the comm.Split() function to get the corresponding group.
 
-    ...
+    mp_comm = comm.Split(color=dp_idx, key=rank)
+    dp_comm = comm.Split(color=mp_idx, key=rank)
 
     # Derive the part_in_dim and part_out_dim depend on is_fc1 and is_megatron_mp
 
-    ...
-
-    raise NotImplementedError
+    if is_fc1:
+        part_in_dim = in_dim
+        part_out_dim = out_dim // mp_size
+    else:
+        if is_megatron_mp:
+            part_in_dim = in_dim // mp_size
+            part_out_dim = out_dim
+        else:
+            part_in_dim = in_dim
+            part_out_dim = out_dim // mp_size
+    
+    return mp_idx, dp_idx, mp_comm, dp_comm, part_in_dim, part_out_dim
 
 
 def naive_collect_forward_input(
