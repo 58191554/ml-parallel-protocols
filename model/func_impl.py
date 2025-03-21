@@ -182,9 +182,7 @@ def megatron_collect_forward_input(
     """TODO: Your code here"""
 
     # Hint: you don't need all the input parameters to get the collected_x
-
-    raise NotImplementedError
-
+    return x
 
 def megatron_collect_forward_output(
     out: np.ndarray,
@@ -215,9 +213,9 @@ def megatron_collect_forward_output(
 
     # Hint: try to work through a toy forward example for megatron-style model parallel to figure out the
     #       the communication functions that you might need
-
-    raise NotImplementedError
-
+    collected_out = np.empty_like(out)
+    mp_comm.Allreduce(out, collected_out, op=MPI.SUM)
+    return collected_out
 
 def naive_collect_backward_output(
     output_grad: np.ndarray,
