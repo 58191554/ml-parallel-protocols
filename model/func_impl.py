@@ -61,8 +61,6 @@ def get_info(
             An integer corresponds to the output feature dimension after specific parallelism
     """
 
-    """TODO: Your code here"""
-
     # Get the mp_idx, dp_idx from rank, mp_size and dp_size (you may not need to use all three of them)
     mp_idx = rank % mp_size
     dp_idx = rank // mp_size
@@ -115,9 +113,6 @@ def naive_collect_forward_input(
             collected layer inputs across different nodes of shape (batch_size, in_dim)
 
     """
-
-    """TODO: Your code here"""
-
     # Note: you may want to ensure that the source variable and destination variable in your mpi func call should
     #       have the same data type, otherwise you will not collect the correct value.
 
@@ -125,7 +120,9 @@ def naive_collect_forward_input(
     #       might not align with your expected layout. In order to get the correct layout, you may wish to use some NumPy
     #       functions (np.split and np.concatenate might be helpful).
 
-    raise NotImplementedError
+    gathered = mp_comm.allgather(x)
+    collected_x = np.concatenate(gathered, axis=1)
+    return collected_x
 
 
 def naive_collect_forward_output(
@@ -153,12 +150,9 @@ def naive_collect_forward_output(
 
     """
 
-    """TODO: Your code here"""
-
-    # Hint: you might have just implemented something similar ^-^
-
-    raise NotImplementedError
-
+    gathered = mp_comm.allgather(out)
+    collected_out = np.concatenate(gathered, axis=1)
+    return collected_out
 
 def megatron_collect_forward_input(
     x: np.ndarray,
