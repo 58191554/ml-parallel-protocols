@@ -316,11 +316,9 @@ def megatron_collect_backward_output(
 
     """
 
-    """TODO: Your code here"""
 
     # Hint: your implementation should be within one line of code
-
-    raise NotImplementedError
+    return output_grad
 
 
 def megatron_collect_backward_x(
@@ -351,8 +349,7 @@ def megatron_collect_backward_x(
     """TODO: Your code here"""
 
     # Hint: your implementation should be within one line of code
-
-    raise NotImplementedError
+    return grad_x
 
 
 def collect_weight_grad(
