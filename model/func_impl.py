@@ -315,8 +315,6 @@ def megatron_collect_backward_output(
             collected layer output_grad across different nodes of shape (batch_size, part_out_dim)
 
     """
-
-
     # Hint: your implementation should be within one line of code
     return output_grad
 
@@ -345,9 +343,6 @@ def megatron_collect_backward_x(
             collected layer backward grad_x across different nodes of shape (batch_size, part_in_dim)
 
     """
-
-    """TODO: Your code here"""
-
     # Hint: your implementation should be within one line of code
     return grad_x
 
@@ -379,9 +374,11 @@ def collect_weight_grad(
             collected gradients value of shape (1, out_dim) for fc bias across different nodes
 
     """
-
-    """TODO: Your code here"""
-
     # Hint: Think about how you might want to aggregate the gradients from different nodes in data parallel training
-
-    raise NotImplementedError
+    collected_grad_w = np.empty_like(grad_w)
+    collected_grad_b = np.empty_like(grad_b)
+    
+    dp_comm.Allreduce(grad_w, collected_grad_w, op=MPI.SUM)
+    dp_comm.Allreduce(grad_b, collected_grad_b, op=MPI.SUM)
+    
+    return collected_grad_w, collected_grad_b
