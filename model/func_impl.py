@@ -208,9 +208,6 @@ def megatron_collect_forward_output(
             collected layer outputs across different nodes of shape (batch_size, out_dim)
 
     """
-
-    """TODO: Your code here"""
-
     # Hint: try to work through a toy forward example for megatron-style model parallel to figure out the
     #       the communication functions that you might need
     collected_out = np.empty_like(out)
@@ -241,13 +238,10 @@ def naive_collect_backward_output(
             collected layer output_grad across different nodes of shape (batch_size, part_out_dim)
 
     """
-
-    """TODO: Your code here"""
-
     # Hint: you might want to use np.split to get the collected_output_grad for each MP node
-
-    raise NotImplementedError
-
+    parts = np.split(output_grad, mp_size, axis=1)
+    collected_output_grad = parts[mp_group_idx]
+    return collected_output_grad
 
 def naive_collect_backward_x(
     grad_x: np.ndarray,
@@ -273,16 +267,29 @@ def naive_collect_backward_x(
             collected layer backward grad_x across different nodes of shape (batch_size, part_in_dim)
 
     """
-
-    """TODO: Your code here"""
-
     # Hint 1: The communication pattern for this function can be seen as the reverse of its forward
     #         , so you might to check the naive_collect_forward_output() impl.
 
     # Hint 2: You might want to use reduce_scatter
+    # ensure grad_x is contiguous memory layout
+    grad_x = np.ascontiguousarray(grad_x)
+    batch_size, in_dim = grad_x.shape
+    part_in_dim = in_dim // mp_size
 
-    raise NotImplementedError
+    # transpose grad_x: shape becomes (in_dim, batch_size)
+    trans_grad_x = grad_x.T.copy()  # ensure new array is contiguous
 
+    # 准备接收缓冲区：每个节点接收 part_in_dim * batch_size 个元素
+    recv_buf = np.empty(part_in_dim * batch_size, dtype=grad_x.dtype)
+
+    # use Reduce_scatter to sum the transposed flattened data and scatter to each node
+    mp_comm.Reduce_scatter([trans_grad_x.flatten(), MPI.DOUBLE],
+                           [recv_buf, MPI.DOUBLE],
+                           op=MPI.SUM)
+
+    # reshape the received data: shape becomes (part_in_dim, batch_size), then transpose to (batch_size, part_in_dim)
+    collected_grad_x = np.reshape(recv_buf, (part_in_dim, batch_size)).T
+    return collected_grad_x
 
 def megatron_collect_backward_output(
     output_grad: np.ndarray,
